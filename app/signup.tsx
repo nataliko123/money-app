@@ -1,0 +1,361 @@
+import { LinearGradient } from "expo-linear-gradient";
+import { Stack, useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+    Dimensions,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { TextInput } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const WINDOW_WIDTH = Dimensions.get("window").width;
+const IMG_WIDTH = WINDOW_WIDTH - 20;
+const IMG_HEIGHT = IMG_WIDTH * (397 / 497);
+
+// Main component for the sign-in screen
+export default function SignInScreen() {
+    const [userEmail, setUserEmail] = useState("");
+    const [userPassword, setUserPassword] = useState("");
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+
+    const navigation = useRouter();
+
+    // Validate email format
+    const validateEmail = (email: string) => {
+        return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$/.test(email);
+    };
+
+    // Check if password contains special characters
+    const isPasswordValid = (password: string) => {
+        return /[*!@]/.test(password);
+    };
+
+    // Transform password to asterisks when not visible
+    const displayPassword = isPasswordVisible ? userPassword : userPassword.replace(/./g, "*");
+
+    return (
+        <View style={styles.mainContainer}>
+            <SafeAreaView
+                style={styles.safeContainer}
+                edges={["right", "bottom", "left"]}
+            >
+                <StatusBar hidden />
+                <Stack.Screen options={{ headerShown: false }} />
+
+                {/* Background decorative image */}
+                <View style={styles.bgImageContainer}>
+                    <Image
+                        source={require("../assets/images/threeCircle.png")}
+                        resizeMode="contain"
+                        style={styles.bgImage}
+                    />
+                </View>
+
+                {/* Logo and welcome text */}
+                <View style={styles.logoContainer}>
+                    <Image
+                        source={require("../assets/images/whiteLogo.png")}
+                        resizeMode="cover"
+                        style={styles.logoImage}
+                    />
+                    <Text style={styles.welcomeText}>Welcome Back</Text>
+                </View>
+
+                {/* Form with keyboard handling */}
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.formFlex}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 40 : -200}
+                >
+                    <ScrollView
+                        contentContainerStyle={styles.scrollContainer}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <View style={styles.formWrapper}>
+                            <Text style={styles.formTitle}>Sign Up</Text>
+
+                            {/* Email input field */}
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    label="Email Address"
+                                    value={userEmail}
+                                    onChangeText={setUserEmail}
+                                    mode="flat"
+                                    keyboardType="email-address"
+                                    style={styles.textInput}
+                                    underlineColor={
+                                        hasSubmitted && !validateEmail(userEmail)
+                                            ? "#FD2727"
+                                            : "#6075FF"
+                                    }
+                                    activeUnderlineColor={
+                                        hasSubmitted && !validateEmail(userEmail)
+                                            ? "#FD2727"
+                                            : "#B9B9B9"
+                                    }
+                                    placeholderTextColor={
+                                        hasSubmitted && !validateEmail(userEmail)
+                                            ? "#FD2727"
+                                            : "#757575"
+                                    }
+                                    contentStyle={styles.inputContent}
+                                    underlineStyle={styles.inputUnderline}
+                                    selectionColor="#1433FF"
+                                    right={
+                                        userEmail.length > 2 &&
+                                        userEmail.includes("@") &&
+                                        validateEmail(userEmail) ? (
+                                            <TextInput.Icon
+                                                icon={() => (
+                                                    <Image
+                                                        source={require("../assets/images/checkmark.png")}
+                                                        style={styles.validIcon}
+                                                    />
+                                                )}
+                                            />
+                                        ) : null
+                                    }
+                                />
+                                {hasSubmitted && !validateEmail(userEmail) && (
+                                    <Text style={styles.validationError}>
+                                        The email address is incomplete.
+                                    </Text>
+                                )}
+                            </View>
+
+                            {/* Password input field */}
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    label="Password"
+                                    value={displayPassword}
+                                    onChangeText={(text) => {
+                                        // Update userPassword directly with raw input
+                                        setUserPassword(text);
+                                    }}
+                                    mode="flat"
+                                    style={styles.textInput}
+                                    keyboardType="default"
+                                    secureTextEntry={false} // Disable native secureTextEntry for custom asterisk display
+                                    textContentType="none" // Prevent native password behavior
+                                    underlineColor="#6075FF"
+                                    activeUnderlineColor="#B9B9B9"
+                                    contentStyle={styles.inputContent}
+                                    underlineStyle={styles.inputUnderline}
+                                    selectionColor="#1433FF"
+                                    right={
+                                        userPassword.length > 0 ? (
+                                            <TextInput.Icon
+                                                icon={() => (
+                                                    <Image
+                                                        source={
+                                                            isPasswordVisible
+                                                                ? require("../assets/images/eye.png")
+                                                                : require("../assets/images/show.png")
+                                                        }
+                                                        style={
+                                                            isPasswordVisible
+                                                                ? styles.eyeIcon
+                                                                : styles.showIcon
+                                                        }
+                                                    />
+                                                )}
+                                                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                                            />
+                                        ) : null
+                                    }
+                                />
+                                {hasSubmitted && !isPasswordValid(userPassword) && (
+                                    <Text style={styles.validationError}>
+                                        Must contain special characters - !, @, *
+                                    </Text>
+                                )}
+                            </View>
+
+                            <Text style={styles.resetPasswordLink}>Forgot Password?</Text>
+
+                            {/* Login button */}
+                            <TouchableOpacity
+                                style={[styles.submitButton, styles.buttonShadow]}
+                                onPress={() => {
+                                    setHasSubmitted(true);
+                                    navigation.push("/verification");
+                                }}
+                            >
+                                <LinearGradient
+                                    colors={["#6075FF", "#1433FF"]}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.buttonGradient}
+                                >
+                                    <Text style={styles.buttonLabel}>Sign Up</Text>
+                                    <Image
+                                        source={require("../assets/images/whiteArrow.png")}
+                                        resizeMode="contain"
+                                        style={styles.arrowIcon}
+                                    />
+                                    <Image
+                                        source={require("../assets/images/signInButton.png")}
+                                        resizeMode="cover"
+                                        style={styles.buttonOverlay}
+                                    />
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+    },
+    safeContainer: {
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    bgImageContainer: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        zIndex: 0, // Ensure background stays behind form
+    },
+    bgImage: {
+        width: IMG_WIDTH,
+        height: IMG_HEIGHT,
+    },
+    logoContainer: {
+        position: "absolute",
+        top: 65,
+        left: 50,
+        zIndex: 1, // Ensure logo stays above background
+    },
+    logoImage: {
+        width: 60,
+        height: 60,
+    },
+    welcomeText: {
+        color: "#fff",
+        fontSize: 28,
+        fontWeight: "400",
+        fontFamily: "Montserrat",
+        maxWidth: 140,
+        marginTop: 15,
+    },
+    formFlex: {
+        flex: 1,
+        zIndex: 2, // Ensure form stays above background
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: "flex-end",
+        paddingBottom: 20, // Add padding to prevent overlap with keyboard
+    },
+    formWrapper: {
+        alignItems: "center",
+        paddingHorizontal: 30,
+        paddingBottom: 70,
+    },
+    textInput: {
+        width: "100%",
+        backgroundColor: "transparent",
+        fontSize: 16,
+    },
+    inputWrapper: {
+        width: "100%",
+    },
+    formTitle: {
+        color: "#3A3A3A",
+        fontSize: 28,
+        fontWeight: "700",
+        fontFamily: "Montserrat",
+        marginBottom: 45,
+        alignSelf: "flex-start",
+    },
+    resetPasswordLink: {
+        color: "#2B47FC",
+        fontSize: 16,
+        fontWeight: "400",
+        fontFamily: "Montserrat",
+        marginTop: 20,
+        alignSelf: "flex-start",
+    },
+    submitButton: {
+        marginTop: 90,
+        width: 320,
+        height: 70,
+        borderRadius: 28,
+        overflow: "hidden",
+    },
+    buttonGradient: {
+        flex: 1,
+        borderRadius: 28,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+    },
+    buttonLabel: {
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: "600",
+    },
+    arrowIcon: {
+        width: 24,
+        height: 24,
+    },
+    buttonOverlay: {
+        position: "absolute",
+        top: 0,
+        left: 190,
+        width: 130,
+        height: 55,
+    },
+    buttonShadow: {
+        shadowColor: "#1433FF",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 7,
+    },
+    validIcon: {
+        width: 18,
+        height: 14,
+        marginRight: 10,
+    },
+    eyeIcon: {
+        width: 18,
+        height: 12,
+        marginRight: 10,
+    },
+    showIcon: {
+        width: 18,
+        height: 16,
+        marginRight: 10,
+    },
+    validationError: {
+        color: "#FD2727",
+        fontSize: 12,
+        fontFamily: "Montserrat",
+        marginTop: 5,
+        marginLeft: 5,
+    },
+    inputContent: {
+        paddingVertical: 10,
+    },
+    inputUnderline: {
+        backgroundColor: "#6075FF",
+    },
+});
